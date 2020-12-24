@@ -96,7 +96,8 @@ class OsuTpp extends PIXI.Application
         // Load Audio
         this.mainAudio = new Howl({
             src: [url],
-            rate: rate
+            rate: rate,
+            loop: true,
         });
 
         this.playbackRate = rate;
