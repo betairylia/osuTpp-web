@@ -5,9 +5,11 @@ class OsuTpp extends PIXI.Application
 {
     constructor(isDefault = true)
     {
+        var res = (window.devicePixelRatio || 1) / 4;
+
         super({
             antialias: true,
-            resolution: window.devicePixelRatio || 1,
+            resolution: res,
         });
 
         if (isDefault)
@@ -23,7 +25,7 @@ class OsuTpp extends PIXI.Application
         this.renderer.view.style.position = "absolute";
         this.renderer.view.style.display = "block";
         this.renderer.autoResize = true;
-        this.renderer.resize(window.innerWidth, window.innerHeight);
+        this.renderer.resize(window.innerWidth / res, window.innerHeight / res);
 
         this.PIXIready = false;
         this.Howlready = false;
@@ -67,10 +69,10 @@ class OsuTpp extends PIXI.Application
 
         // Setup UI elements
         this.tracks = [];
-        for (let i = 0; i < 8; i++)
+        for (let i = 0; i < 32; i++)
         {
             var t = new Track(this);
-            t.y = 150 + i * 150;
+            t.y = (80 / this.renderer.resolution) + i * 150;
             if (i > 0) { t.Mute(); }
             this.stage.addChild(t);
             this.tracks.push(t);

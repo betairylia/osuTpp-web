@@ -16,7 +16,7 @@ class Track extends PIXI.Container
         this.bg = PIXI.Sprite.from(PIXI.Texture.WHITE);
         this.bg.anchor.set(0.0, 0.5);
         this.bg.y = 0;
-        this.bg.width = this.app.renderer.width;
+        this.bg.width = this.app.renderer.width / this.app.renderer.resolution;
         this.bg.height = 128;
         this.bg.tint = 0x242424;
         this.bg.zIndex = -100000000;
@@ -172,8 +172,8 @@ class Track extends PIXI.Container
             else // Green
             {
                 var _SV = 100.0 / (-properties[1]);
-                _SV = Math.max((_SV - 1.0) * 1.0 + _SV, 0.001);
-                this.SVcurve.Insert(time, _SV * currentBPM / this.BPM, CurveNodeType.Step);
+                _SV = Math.max((_SV - 1.0) * 2.0 + _SV, 0.001);
+                this.SVcurve.Insert(time, _SV * currentBPM / this.BPM, CurveNodeType.Linear);
             }
         }
     }
