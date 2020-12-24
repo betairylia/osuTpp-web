@@ -17,12 +17,18 @@ class OsuTpp extends PIXI.Application
 
         // Add the canvas that Pixi automatically created for you to the HTML document
         document.body.appendChild(this.view);
+        this.isLoaded = false;
 
         // Fill Screen
         this.renderer.view.style.position = "absolute";
         this.renderer.view.style.display = "block";
         this.renderer.autoResize = true;
         this.renderer.resize(window.innerWidth, window.innerHeight);
+
+        this.PIXIready = false;
+        this.Howlready = false;
+        this.playbackRate = 1.0;
+        this.audioCursor = 0;
 
         // Setup Loader to load resources
         this.loader = PIXI.Loader.shared;
@@ -31,29 +37,49 @@ class OsuTpp extends PIXI.Application
                 "assets/img/taikohitcircle.png",
                 "assets/img/taikohitcircleoverlay.png",
             ])
-            .load(this.onStartUpLoadFinish.bind(this));
+            .load(() => { this.PIXIready = true; this.onStartUpLoadFinish(); });
 
+        this.hitBaseVol = 1.0;
         this.hitsounds = [
-            new Howl({ src: ["assets/audio/hitsounds/taiko-normal-hitnormal.wav"] }),
-            new Howl({ src: ["assets/audio/hitsounds/taiko-normal-hitclap.wav"] }),
-            new Howl({ src: ["assets/audio/hitsounds/taiko-normal-hitfinish.wav"] }),
-            new Howl({ src: ["assets/audio/hitsounds/taiko-normal-hitwhistle.wav"] }),
+            new Howl({ src: ["assets/audio/hitsounds/taiko-normal-hitnormal.wav"], volume: this.hitBaseVol }),
+            new Howl({ src: ["assets/audio/hitsounds/taiko-normal-hitclap.wav"], volume: this.hitBaseVol }),
+            new Howl({ src: ["assets/audio/hitsounds/taiko-normal-hitfinish.wav"], volume: this.hitBaseVol }),
+            new Howl({ src: ["assets/audio/hitsounds/taiko-normal-hitwhistle.wav"], volume: this.hitBaseVol }),
         ]
 
         // No audio rn
         this.mainAudio = null;
+        this.length = -1;
     }
 
     onStartUpLoadFinish()
     {
+        // Wait until everything are ready
+        if (!(this.PIXIready && this.Howlready)) { return; }
+
+        // Register textures
         this.noteFillTex = this.loader.resources["assets/img/taikohitcircle.png"].texture;
         this.noteOverlayTex = this.loader.resources["assets/img/taikohitcircleoverlay.png"].texture;
 
-        this.tracks = new Array(1);
-        this.tracks[0] = new Track(this);
-        this.stage.addChild(this.tracks[0]);
+        // Play audio
+        this.length = this.mainAudio.duration() * 1000.0;
+        this.mainAudio.play();
 
+        // Setup UI elements
+        this.tracks = [];
+        for (let i = 0; i < 8; i++)
+        {
+            var t = new Track(this);
+            t.y = 150 + i * 150;
+            if (i > 0) { t.Mute(); }
+            this.stage.addChild(t);
+            this.tracks.push(t);
+        }
+
+        // Register update event
         this.ticker.add(this.Update.bind(this));
+
+        this.isLoaded = true;
     }
 
     Update()
@@ -65,15 +91,23 @@ class OsuTpp extends PIXI.Application
         }
     }
 
-    LoadAudio(url, rate = 1.0)
+    LoadAudio(url, rate = 1.0, startMS = 0)
     {
         // Load Audio
         this.mainAudio = new Howl({
-            src: [url]
+            src: [url],
+            rate: rate
         });
 
-        this.mainAudio.play();
-        this.mainAudio.rate(rate);
+        this.playbackRate = rate;
+        this.audioCursor = startMS;
+        this.mainAudio.seek(startMS / 1000.0);
+
+        this.mainAudio.on('load', () =>
+        {
+            this.Howlready = true;
+            this.onStartUpLoadFinish();
+        });
     }
 
     GetAudioTimeMS()

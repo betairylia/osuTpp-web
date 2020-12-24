@@ -14,10 +14,10 @@ const NoteTypes = {
 }
 
 const NoteTint = [
-    0xff0000,
-    0x0000ff,
-    0xff0000,
-    0x0000ff,
+    0xfa2616,
+    0x3f94b5,
+    0xfa2616,
+    0x3f94b5,
     0xffff00,
     0xffff00,
     0xffff00,
@@ -33,11 +33,16 @@ function Note(timeMS, type)
 
 class NoteRenderable extends PIXI.Container
 {
-    constructor(note, size = 64, app = OsuTpp.app)
+    constructor(note, order = 0, size = 64, app = OsuTpp.app)
     {
         super();
         this.note = note;
-        this.played = false;
+        this.zIndex = order;
+
+        if (this.note.type == NoteTypes.DONFinish || this.note.type == NoteTypes.KATFinish)
+        {
+            size *= 1.5;
+        }
 
         this.sprite = new PIXI.Sprite(app.noteFillTex);
         this.sprite.anchor.set(0.5);
