@@ -1,5 +1,5 @@
 import { Note, NoteTypes, Notes as N, NoteRenderable as Nr } from "./note.mjs"
-import { _Fapu_s_Verdancy_HO, _Fapu_s_Verdancy_TP, _16dan_HO, _16dan_TP } from "./_test_osu.mjs"
+import { _Fapu_s_Verdancy_HO, _Fapu_s_Verdancy_TP, _16dan_HO, _16dan_TP } from "./test_osu.mjs"
 import { CurveNodeType, Curve } from "./curve.mjs"
 
 class Track extends PIXI.Container
