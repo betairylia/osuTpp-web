@@ -28,7 +28,7 @@ const NoteTint = [
 
 function Note(timeMS, type)
 {
-    return { time: timeMS, type: type };
+    return { time: timeMS, type: type, appearTime: timeMS, disappearTime: timeMS };
 }
 
 class NoteRenderable extends PIXI.Container

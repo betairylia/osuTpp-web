@@ -35,32 +35,51 @@ class Track extends PIXI.Container
         // console.log(this.SVcurve.Query(70));
         // console.log(this.SVcurve.Query(1000));
 
+        // For better handling notes
+        this.noteAppearenceTree = new RBTree((a, b) => { return a.appearTime - b.appearTime });
+        this.noteDisappearenceTree = new RBTree((a, b) => { return a.disappearTime - b.disappearTime });
+        this.noteTree = new RBTree((a, b) => { return a.time - b.time });
+
         this._prevTime = 0;
         this.muted = false;
 
         // For test
-        this.notes = [];
-        this.aliveRenderables = [];
+        this.notes = []; // not ordered
+        // this.aliveRenderables = [];
 
         this.sortableChildren = true;
 
         // Stress test
         for (let i = 0; i < 1; i++)
         {
-            this.PlaceTestNotes(_16dan_HO, i * 10);
+            this.PlaceTestNotes(_Fapu_s_Verdancy_HO, i * 10);
         }
 
-        this.PlaceTestTimingPoints(_16dan_TP);
+        this.PlaceTestTimingPoints(_Fapu_s_Verdancy_TP);
+        this.InitNoteRendererAccelerator();
 
-        for (let note of this.notes)
-        {
-            this.aliveRenderables.push(new Nr(note, -note.time));
-        }
+        // for (let note of this.notes)
+        // {
+        //     this.aliveRenderables.push(new Nr(note, -note.time));
+        // }
 
-        this.aliveRenderables.forEach(element =>
-        {
-            this.addChild(element);
-        });
+        // this.aliveRenderables.forEach(element =>
+        // {
+        //     this.addChild(element);
+        // });
+    }
+
+    GetOnTrackTime(note, bpm, appearRange = this.bg.width + 500, disappearRange = -500)
+    {
+        // TODO: sliders, spinners, ...
+        var tmp = (1.0 / 2.0 * (bpm / 200.0) * 1.4); // idk what is this but okay
+        return [note.time - appearRange / tmp, note.time - disappearRange / tmp];
+    }
+
+    AddNote(note)
+    {
+        this.notes.push(note);
+        this.noteTree.insert(note);
     }
 
     PlaceTestNotes(src = null, offset = 0)
@@ -86,23 +105,54 @@ class Track extends PIXI.Container
                     var targetTime = parseInt(properties[2]) + offset;
                     if (properties[4] == '0')
                     {
-                        this.notes.push(N.d(targetTime));
+                        this.AddNote(N.d(targetTime));
                     }
                     else if (properties[4] == '8' || properties[4] == '2')
                     {
-                        this.notes.push(N.k(targetTime));
+                        this.AddNote(N.k(targetTime));
                     }
                     else if (properties[4] == '4')
                     {
-                        this.notes.push(N.D(targetTime));
+                        this.AddNote(N.D(targetTime));
                     }
                     else if (properties[4] == '12' || properties[4] == '6')
                     {
-                        this.notes.push(N.K(targetTime));
+                        this.AddNote(N.K(targetTime));
                     }
                 }
             }
         }
+    }
+
+    _UpdateNoteAccInfo(note)
+    {
+        note.SV = this.SVcurve.Query(note.time);
+        var times = this.GetOnTrackTime(note, note.SV * this.BPM)
+        // console.log(times);
+        note.appearTime = times[0];
+        note.disappearTime = times[1];
+
+        this.noteAppearenceTree.insert(note);
+        this.noteDisappearenceTree.insert(note);
+        this.noteTree.insert(note);
+    }
+
+    // Basically a faster UpdateNoteRendererAccelerator(0, length)
+    InitNoteRendererAccelerator()
+    {
+        console.log("InitNoteRendererAccelerator");
+        for (let note of this.notes)
+        {
+            this._UpdateNoteAccInfo(note);
+        }
+        console.log("finished");
+
+        this._prevTime = this.noteAppearenceTree.min().appearTime - 1000;
+    }
+
+    UpdateNoteRendererAccelerator(startTime, endTime)
+    {
+        // TODO
     }
 
     PlaceTestTimingPoints(src)
@@ -122,26 +172,170 @@ class Track extends PIXI.Container
             else // Green
             {
                 var _SV = 100.0 / (-properties[1]);
-                _SV = Math.max((_SV - 1.0) * 1.5 + _SV, 0.1);
-                this.SVcurve.Insert(time, _SV * currentBPM / this.BPM, CurveNodeType.Linear);
+                _SV = Math.max((_SV - 1.0) * 1.0 + _SV, 0.001);
+                this.SVcurve.Insert(time, _SV * currentBPM / this.BPM, CurveNodeType.Step);
             }
         }
     }
 
+    // Given time, modify render list so only notes currently in stage are alive.
+    UpdateRenderList(time)
+    {
+        if (time == this._prevTime) { return; }
+
+        var dirc = (time > this._prevTime); // true = forward; false = reverse
+
+        //////////////////////////
+        // disappear
+        //////////////////////////
+
+        // // Check disappear tree (disappearTime < time)
+        // // start from current time
+        // var iter = this.noteDisappearenceTree.lowerBound({ disappearTime: time });
+
+        // // mark all note which should disappear (disappearTime < time)
+        // var shouldDel = [] // FIXME: performance ok?
+        // iter.prev(); // move to previous note
+        // while (iter.data() != null)
+        // {
+        //     shouldDel.push(iter.data());
+        // }
+
+        // // Delete them
+        // shouldDel.forEach(note =>
+        // {
+        //     this.removeChild(note);
+        //     this.noteDisappearenceTree.remove(note);
+        // });
+
+        // // Check appear tree (appearTime > time)
+        // // start from current time
+        // iter = this.noteDisappearenceTree.upperBound({ appearTime: time });
+
+        var shouldDel = [];
+
+        // Check all children
+        this.children.forEach(obj =>
+        {
+            if ('note' in obj)
+            {
+                if (obj.note.appearTime > time || obj.note.disappearTime < time)
+                {
+                    shouldDel.push(obj);
+                }
+            }
+        });
+
+        shouldDel.forEach(noteR =>
+        {
+            this.removeChild(noteR);
+        });
+
+        //////////////////////////
+        // Appear
+        //////////////////////////
+
+        // Appearence tree
+        // start from previous time (upperBound: iter.data().appearTime always > _prevTime)
+        var iter = this.noteAppearenceTree.upperBound({ appearTime: this._prevTime });
+
+        var shouldAdd = new Map();
+
+        // Add all notes
+        while (iter.data() != null)
+        {
+            // alias
+            var note = iter.data();
+
+            // check if not exist
+            if ((note.appearTime > this._prevTime) || (note.disappearTime < this._prevTime))
+            {
+                // check if should continue
+                if (note.appearTime <= time)
+                {
+                    // check if should add
+                    if (note.disappearTime >= time)
+                    {
+                        shouldAdd.set(note.time, note);
+                    }
+                }
+                // we are done
+                else
+                {
+                    break;
+                }
+            }
+
+            // Move cursor
+            if (dirc) { iter.next(); }
+            else { iter.prev(); }
+        }
+
+        // Disappearence tree; similar as above
+        iter = this.noteDisappearenceTree.upperBound({ disappearTime: this._prevTime });
+
+        // Add all notes
+        while (iter.data() != null)
+        {
+            // alias
+            var note = iter.data();
+
+            // check if not exist
+            if ((note.appearTime > this._prevTime) || (note.disappearTime < this._prevTime))
+            {
+                // check if should continue
+                if (note.disappearTime >= time)
+                {
+                    // check if should add
+                    if (note.appearTime <= time)
+                    {
+                        shouldAdd.set(note.time, note);
+                    }
+                }
+                // we are done
+                else
+                {
+                    break;
+                }
+            }
+
+            // Move cursor
+            if (dirc) { iter.next(); }
+            else { iter.prev(); }
+        }
+
+        shouldAdd.forEach((v, k) =>
+        {
+            this.addChild(new Nr(v, -v.time));
+        });
+    }
+
     Update(time)
     {
-        if (time - this._prevTime > 100) { this._prevTime = time; }
-        for (let renderable of this.aliveRenderables)
-        {
-            // renderable.x = (renderable.note.time - time) * this.SV / 2.0 * (this.BPM / 200.0) * 1.4;
-            renderable.x = (renderable.note.time - time) * this.SVcurve.Query(renderable.note.time) / 2.0 * (this.BPM / 200.0) * 1.4;
+        // Update render list
+        this.UpdateRenderList(time);
 
-            if (this.muted) { continue; }
-            if (time >= renderable.note.time && this._prevTime < renderable.note.time)
+        // Don't play hitsound if jump
+        if (time - this._prevTime > 100) { this._prevTime = time; }
+
+        // Render
+        for (let renderable of this.children)
+        {
+            // a note
+            if ('note' in renderable)
             {
-                this.app.hitsounds[renderable.note.type].play();
+                // renderable.x = (renderable.note.time - time) * this.SV / 2.0 * (this.BPM / 200.0) * 1.4;
+                renderable.x = (renderable.note.time - time) * renderable.note.SV / 2.0 * (this.BPM / 200.0) * 1.4;
+                // renderable.x = (renderable.note.time - time) * this.SVcurve.Query(renderable.note.time) / 2.0 * (this.BPM / 200.0) * 1.4;
+
+                if (this.muted) { continue; }
+                if (time >= renderable.note.time && this._prevTime < renderable.note.time)
+                {
+                    this.app.hitsounds[renderable.note.type].play();
+                }
             }
         }
+
         this._prevTime = time;
     }
 
