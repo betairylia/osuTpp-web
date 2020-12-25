@@ -4,7 +4,7 @@ import { CurveNodeType, Curve } from "./curve.mjs"
 
 class Track extends PIXI.Container
 {
-    constructor(app, height = 100)
+    constructor(app)
     {
         super();
 
@@ -12,16 +12,20 @@ class Track extends PIXI.Container
         // this.y = 100 + height / 2;
         // this.anchor.set(0.0, 0.5);
 
+        // this.trackHeight = height;
+
         // Create track bg
         this.bg = PIXI.Sprite.from(PIXI.Texture.WHITE);
         this.bg.anchor.set(0.0, 0.5);
         this.bg.y = 0;
         this.bg.width = this.app.renderer.width / this.app.renderer.resolution;
-        this.bg.height = 128;
         this.bg.tint = 0x242424;
         this.bg.zIndex = -100000000;
 
         this.addChild(this.bg);
+
+        this.SetTrackHeight(128);
+        this.SetNoteHeight(128);
         this.SV = 1.0;
         this.BPM = 200.0;
 
@@ -69,7 +73,7 @@ class Track extends PIXI.Container
         // });
     }
 
-    GetOnTrackTime(note, bpm, appearRange = this.bg.width + 500, disappearRange = -500)
+    GetOnTrackTime(note, bpm, appearRange = (this.bg.width / this.scrollSpeed_heightbase) + 500, disappearRange = -500)
     {
         // TODO: sliders, spinners, ...
         var tmp = (1.0 / 2.0 * (bpm / 200.0) * 1.4); // idk what is this but okay
@@ -80,6 +84,8 @@ class Track extends PIXI.Container
     {
         this.notes.push(note);
         this.noteTree.insert(note);
+
+        return this;
     }
 
     PlaceTestNotes(src = null, offset = 0)
@@ -134,12 +140,14 @@ class Track extends PIXI.Container
 
         this.noteAppearenceTree.insert(note);
         this.noteDisappearenceTree.insert(note);
-        this.noteTree.insert(note);
     }
 
     // Basically a faster UpdateNoteRendererAccelerator(0, length)
     InitNoteRendererAccelerator()
     {
+        this.noteAppearenceTree.clear();
+        this.noteDisappearenceTree.clear();
+
         console.log("InitNoteRendererAccelerator");
         for (let note of this.notes)
         {
@@ -148,11 +156,13 @@ class Track extends PIXI.Container
         console.log("finished");
 
         this._prevTime = this.noteAppearenceTree.min().appearTime - 1000;
+        return this;
     }
 
     UpdateNoteRendererAccelerator(startTime, endTime)
     {
         // TODO
+        return this;
     }
 
     PlaceTestTimingPoints(src)
@@ -176,6 +186,8 @@ class Track extends PIXI.Container
                 this.SVcurve.Insert(time, _SV * currentBPM / this.BPM, CurveNodeType.Linear);
             }
         }
+
+        return this;
     }
 
     // Given time, modify render list so only notes currently in stage are alive.
@@ -306,8 +318,26 @@ class Track extends PIXI.Container
 
         shouldAdd.forEach((v, k) =>
         {
-            this.addChild(new Nr(v, -v.time));
+            this.addChild(new Nr(v, -v.time, this.trackHeight / 2));
         });
+
+        return this;
+    }
+
+    SetTrackHeight(height)
+    {
+        this.trackBGHeight = height;
+        this.bg.height = this.trackBGHeight;
+
+        return this;
+    }
+
+    SetNoteHeight(height)
+    {
+        this.trackHeight = height;
+        this.scrollSpeed_heightbase = this.trackHeight / 128.0;
+
+        return this;
     }
 
     Update(time)
@@ -318,6 +348,7 @@ class Track extends PIXI.Container
         // Don't play hitsound if jump
         if (time - this._prevTime > 100) { this._prevTime = time; }
 
+
         // Render
         for (let renderable of this.children)
         {
@@ -325,7 +356,7 @@ class Track extends PIXI.Container
             if ('note' in renderable)
             {
                 // renderable.x = (renderable.note.time - time) * this.SV / 2.0 * (this.BPM / 200.0) * 1.4;
-                renderable.x = (renderable.note.time - time) * renderable.note.SV / 2.0 * (this.BPM / 200.0) * 1.4;
+                renderable.x = (renderable.note.time - time) * renderable.note.SV / 2.0 * (this.BPM / 200.0) * 1.4 * this.scrollSpeed_heightbase;
                 // renderable.x = (renderable.note.time - time) * this.SVcurve.Query(renderable.note.time) / 2.0 * (this.BPM / 200.0) * 1.4;
 
                 if (this.muted) { continue; }
@@ -342,11 +373,13 @@ class Track extends PIXI.Container
     Mute()
     {
         this.muted = true;
+        return this;
     }
 
     Unmute()
     {
         this.muted = false;
+        return this;
     }
 }
 

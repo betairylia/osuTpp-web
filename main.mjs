@@ -8,7 +8,7 @@ var app;
 function init()
 {
     app = new OsuTpp();
-    app.LoadAudio("assets/audio/Gardens Under A Spring Sky.mp3", 1.5, 0);
+    app.LoadAudio("assets/audio/Gardens Under A Spring Sky.mp3", 1.0, 0);
     // app.LoadAudio("assets/audio/16th-dan.mp3", 1.0, 326736);
     app.ticker.add(update)
 

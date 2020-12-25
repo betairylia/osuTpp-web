@@ -1,11 +1,12 @@
 
 import { Track } from "./track.mjs";
+import { CurveTrack } from "./curveTrack.mjs";
 
 class OsuTpp extends PIXI.Application
 {
     constructor(isDefault = true)
     {
-        var res = (window.devicePixelRatio || 1) / 4;
+        var res = (window.devicePixelRatio || 1);
 
         super({
             antialias: true,
@@ -41,7 +42,7 @@ class OsuTpp extends PIXI.Application
             ])
             .load(() => { this.PIXIready = true; this.onStartUpLoadFinish(); });
 
-        this.hitBaseVol = 1.0;
+        this.hitBaseVol = 0.5;
         this.hitsounds = [
             new Howl({ src: ["assets/audio/hitsounds/taiko-normal-hitnormal.wav"], volume: this.hitBaseVol }),
             new Howl({ src: ["assets/audio/hitsounds/taiko-normal-hitclap.wav"], volume: this.hitBaseVol }),
@@ -69,13 +70,34 @@ class OsuTpp extends PIXI.Application
 
         // Setup UI elements
         this.tracks = [];
-        for (let i = 0; i < 32; i++)
+
+        // Seems needs to be power of 2 (at least ntrackH / ctrackH)
+        var gap = 8;
+        var trackH = 72;
+        var ntrackH = 64;
+        var ctrackH = 32;
+
+        var _calc_gap = gap + trackH + ctrackH;
+
+        for (let i = 0; i < 10; i++)
         {
-            var t = new Track(this);
-            t.y = (80 / this.renderer.resolution) + i * 150;
+            var t = new Track(this)
+                .SetTrackHeight(trackH)
+                .SetNoteHeight(ntrackH)
+                .InitNoteRendererAccelerator();
+
+            var ct = new CurveTrack(this)
+                .SetData(t.SVcurve)
+                .SetTrackHeight(ctrackH);
+
+            t.y = 60 + (trackH / 2) + i * _calc_gap;
+            ct.y = 60 + trackH + (ctrackH / 2) + i * _calc_gap;
+
             if (i > 0) { t.Mute(); }
             this.stage.addChild(t);
+            this.stage.addChild(ct);
             this.tracks.push(t);
+            this.tracks.push(ct);
         }
 
         // Register update event
