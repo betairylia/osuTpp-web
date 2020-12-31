@@ -1,6 +1,6 @@
 
-import { Track } from "./track.mjs";
-import { CurveTrack } from "./curveTrack.mjs";
+import { PreviewTrack } from "./tracks/previewTrack.mjs";
+import { CurveTrack } from "./tracks/curveTrack.mjs";
 
 class OsuTpp extends PIXI.Application
 {
@@ -81,7 +81,7 @@ class OsuTpp extends PIXI.Application
 
         for (let i = 0; i < 10; i++)
         {
-            var t = new Track(this)
+            var t = new PreviewTrack(this)
                 .SetTrackHeight(trackH)
                 .SetNoteHeight(ntrackH)
                 .InitNoteRendererAccelerator();

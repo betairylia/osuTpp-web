@@ -1,33 +1,19 @@
-import { Note, NoteTypes, Notes as N, NoteRenderable as Nr } from "./note.mjs"
-import { _Fapu_s_Verdancy_HO, _Fapu_s_Verdancy_TP, _16dan_HO, _16dan_TP } from "./test_osu.mjs"
-import { CurveNodeType, Curve } from "./curve.mjs"
+import { Note, NoteTypes, Notes as N, NoteRenderable as Nr } from "../note.mjs"
+import { _Fapu_s_Verdancy_HO, _Fapu_s_Verdancy_TP, _16dan_HO, _16dan_TP } from "../test_osu.mjs"
+import { CurveNodeType, Curve } from "../curve.mjs"
+import { NoteTrack } from "./noteTrack.mjs";
 
-class Track extends PIXI.Container
+class PreviewTrack extends NoteTrack
 {
     constructor(app)
     {
-        super();
+        super(app, 0x242424);
 
         this.app = app;
         // this.y = 100 + height / 2;
         // this.anchor.set(0.0, 0.5);
 
-        // this.trackHeight = height;
-
-        // Create track bg
-        this.bg = PIXI.Sprite.from(PIXI.Texture.WHITE);
-        this.bg.anchor.set(0.0, 0.5);
-        this.bg.y = 0;
-        this.bg.width = this.app.renderer.width / this.app.renderer.resolution;
-        this.bg.tint = 0x242424;
-        this.bg.zIndex = -100000000;
-
-        this.addChild(this.bg);
-
-        this.SetTrackHeight(128);
-        this.SetNoteHeight(128);
         this.SV = 1.0;
-        this.BPM = 200.0;
 
         this.SVcurve = new Curve(app.length);
 
@@ -42,35 +28,21 @@ class Track extends PIXI.Container
         // For better handling notes
         this.noteAppearenceTree = new RBTree((a, b) => { return a.appearTime - b.appearTime });
         this.noteDisappearenceTree = new RBTree((a, b) => { return a.disappearTime - b.disappearTime });
-        this.noteTree = new RBTree((a, b) => { return a.time - b.time });
+        // this.noteTree = new RBTree((a, b) => { return a.time - b.time });
 
         this._prevTime = 0;
         this.muted = false;
-
-        // For test
-        this.notes = []; // not ordered
-        // this.aliveRenderables = [];
 
         this.sortableChildren = true;
 
         // Stress test
         for (let i = 0; i < 1; i++)
         {
-            this.PlaceTestNotes(_Fapu_s_Verdancy_HO, i * 10);
+            this.PlaceOsuHitObjects(_Fapu_s_Verdancy_HO, i * 10);
         }
 
-        this.PlaceTestTimingPoints(_Fapu_s_Verdancy_TP);
+        this.PlaceOsuTimingPoints(_Fapu_s_Verdancy_TP);
         this.InitNoteRendererAccelerator();
-
-        // for (let note of this.notes)
-        // {
-        //     this.aliveRenderables.push(new Nr(note, -note.time));
-        // }
-
-        // this.aliveRenderables.forEach(element =>
-        // {
-        //     this.addChild(element);
-        // });
     }
 
     GetOnTrackTime(note, bpm, appearRange = (this.bg.width / this.scrollSpeed_heightbase) + 500, disappearRange = -500)
@@ -78,56 +50,6 @@ class Track extends PIXI.Container
         // TODO: sliders, spinners, ...
         var tmp = (1.0 / 2.0 * (bpm / 200.0) * 1.4); // idk what is this but okay
         return [note.time - appearRange / tmp, note.time - disappearRange / tmp];
-    }
-
-    AddNote(note)
-    {
-        this.notes.push(note);
-        this.noteTree.insert(note);
-
-        return this;
-    }
-
-    PlaceTestNotes(src = null, offset = 0)
-    {
-        if (src == null)
-        {
-            this.notes = [
-                N.d(1500),
-                N.d(1600),
-                N.k(1700),
-                N.d(1800),
-                N.k(1900),
-            ]
-        }
-        else
-        {
-            var lines = src.split("\n");
-            for (let line of lines)
-            {
-                var properties = line.split(",");
-                if (properties[3] == '1' || properties[3] == '5')
-                {
-                    var targetTime = parseInt(properties[2]) + offset;
-                    if (properties[4] == '0')
-                    {
-                        this.AddNote(N.d(targetTime));
-                    }
-                    else if (properties[4] == '8' || properties[4] == '2')
-                    {
-                        this.AddNote(N.k(targetTime));
-                    }
-                    else if (properties[4] == '4')
-                    {
-                        this.AddNote(N.D(targetTime));
-                    }
-                    else if (properties[4] == '12' || properties[4] == '6')
-                    {
-                        this.AddNote(N.K(targetTime));
-                    }
-                }
-            }
-        }
     }
 
     _UpdateNoteAccInfo(note)
@@ -165,7 +87,7 @@ class Track extends PIXI.Container
         return this;
     }
 
-    PlaceTestTimingPoints(src)
+    PlaceOsuTimingPoints(src)
     {
         var currentBPM = 0.0;
 
@@ -318,27 +240,19 @@ class Track extends PIXI.Container
 
         shouldAdd.forEach((v, k) =>
         {
-            this.addChild(new Nr(v, -v.time, this.trackHeight / 2));
+            this.addChild(new Nr(v, -v.time, this.noteHeight / 2));
         });
 
         return this;
     }
 
-    SetTrackHeight(height)
-    {
-        this.trackBGHeight = height;
-        this.bg.height = this.trackBGHeight;
+    // SetTrackHeight(height)
+    // {
+    //     this.trackHeight = height;
+    //     this.bg.height = this.trackHeight;
 
-        return this;
-    }
-
-    SetNoteHeight(height)
-    {
-        this.trackHeight = height;
-        this.scrollSpeed_heightbase = this.trackHeight / 128.0;
-
-        return this;
-    }
+    //     return this;
+    // }
 
     Update(time)
     {
@@ -383,4 +297,4 @@ class Track extends PIXI.Container
     }
 }
 
-export { Track }
+export { PreviewTrack }

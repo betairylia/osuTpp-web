@@ -1,3 +1,5 @@
+import { BaseTrack } from './baseTrack.mjs'
+
 const fragmentSrc = `
 precision mediump float;
 
@@ -40,23 +42,15 @@ void main(void)
 
 const DEFAULT_N_SEGMENTS = 1024;
 
-class CurveTrack extends PIXI.Container
+class CurveTrack extends BaseTrack
 {
     constructor(app)
     {
-        super();
+        super(app, 0x162122);
 
         this.app = app;
 
         this.trackWidth = this.app.renderer.width / this.app.renderer.resolution;
-
-        // Create curve track bg
-        this.bg = PIXI.Sprite.from(PIXI.Texture.WHITE);
-        this.bg.anchor.set(0.0, 0.5);
-        this.bg.y = 0;
-        this.bg.width = this.trackWidth;
-        this.bg.tint = 0x162122;
-        this.bg.zIndex = -100000000;
 
         this.SetSegments(DEFAULT_N_SEGMENTS);
 
@@ -106,11 +100,17 @@ class CurveTrack extends PIXI.Container
 
     SetTrackHeight(height)
     {
-        this.trackHeight = height;
-        this.bg.height = this.trackHeight;
-        this.curveRenderable.height = this.trackHeight;
-        this.renderFilter.uniforms.iRes = [1.0 / this.trackWidth, 1.0 / this.trackHeight];
-        this.renderFilter.uniforms.trackHeight = this.trackHeight;
+        super.SetTrackHeight(height);
+
+        if (this.curveRenderable)
+        {
+            this.curveRenderable.height = this.trackHeight;
+        }
+        if (this.renderFilter)
+        {
+            this.renderFilter.uniforms.iRes = [1.0 / this.trackWidth, 1.0 / this.trackHeight];
+            this.renderFilter.uniforms.trackHeight = this.trackHeight;
+        }
 
         return this;
     }
