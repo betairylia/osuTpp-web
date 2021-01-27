@@ -1,0 +1,30 @@
+<head>
+    <!-- <script src = "https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.1/howler.min.js"
+        integrity="sha512-L6Z/YtIPQ7eU3BProP34WGU5yIRk7tNHk7vaC2dB1Vy1atz6wl9mCkTPPZ2Rn1qPr+vY2mZ9odZLdGYuaBk7dQ=="
+        crossorigin="anonymous"></script> -->
+    <script src="howler.js"></script>
+    <script src="pixi.js"></script>
+    <script src="js/lib/RBTree.js"></script>
+    <style>
+        * {
+            padding: 0;
+            margin: 0
+        }
+    </style>
+</head>
+
+<body>
+    <script type="module" src="main-piae-mentes.mjs"></script>
+    <p style="margin: 10px;font-family:monospace; position: absolute; color: aliceblue; z-index: 10;" id="timestamp">
+    </p>
+    <p style="margin: 10px;font-family: monospace; position: absolute; bottom: 0; color: aliceblue; z-index: 10;">
+        Stress Test / 10 Tracks / 2x SV gain + linear interpolation (<a
+            href=https://osu.ppy.sh/beatmapsets/1080892#taiko/2266329>https://osu.ppy.sh/beatmapsets/1080892#taiko/2266329</a>)
+    </p>
+
+    <p style="margin: 10px; position: absolute; z-index: 10; right:0;">
+        <button id="RandomJumpBtn">Random Jump</button>
+        <button id="BackBtn">Back 15s</button>
+        <button id="ForwardBtn">Forward 15s</button>
+    </p>
+</body>

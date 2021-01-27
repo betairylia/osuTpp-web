@@ -4,9 +4,9 @@ import { BaseTrack } from "./baseTrack.mjs"
 
 class NoteTrack extends BaseTrack
 {
-    constructor(app)
+    constructor(app, height)
     {
-        super(app, 0x242424);
+        super(app, 0x242424, height);
 
         this.SetNoteHeight(this.trackHeight);
 

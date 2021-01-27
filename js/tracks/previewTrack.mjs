@@ -5,9 +5,9 @@ import { NoteTrack } from "./noteTrack.mjs";
 
 class PreviewTrack extends NoteTrack
 {
-    constructor(app)
+    constructor(app, height)
     {
-        super(app, 0x242424);
+        super(app, height, 0x242424);
 
         this.app = app;
         // this.y = 100 + height / 2;
@@ -104,12 +104,20 @@ class PreviewTrack extends NoteTrack
             else // Green
             {
                 var _SV = 100.0 / (-properties[1]);
-                _SV = Math.max((_SV - 1.0) * 2.0 + _SV, 0.001);
-                this.SVcurve.Insert(time, _SV * currentBPM / this.BPM, CurveNodeType.Linear);
+                // _SV = Math.max((_SV - 1.0) * 2.0 + _SV, 0.001);
+                // this.SVcurve.Insert(time, _SV * currentBPM / this.BPM, CurveNodeType.Linear);
+
+                _SV = Math.max((_SV - 1.0) * 1.0 + _SV, 0.001);
+                this.SVcurve.Insert(time, _SV * currentBPM / this.BPM, CurveNodeType.Step);
             }
         }
 
         return this;
+    }
+
+    AddNoteRenderables(note)
+    {
+        this.addChild(new Nr(note, -note.time, this.noteHeight / 2));
     }
 
     // Given time, modify render list so only notes currently in stage are alive.
@@ -240,7 +248,7 @@ class PreviewTrack extends NoteTrack
 
         shouldAdd.forEach((v, k) =>
         {
-            this.addChild(new Nr(v, -v.time, this.noteHeight / 2));
+            this.AddNoteRenderables(v);
         });
 
         return this;

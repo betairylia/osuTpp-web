@@ -1,10 +1,11 @@
 
 import { PreviewTrack } from "./tracks/previewTrack.mjs";
 import { CurveTrack } from "./tracks/curveTrack.mjs";
+import { PiaeMentesTrack } from "./tracks/piae-mentesTrack.mjs";
 
 class OsuTpp extends PIXI.Application
 {
-    constructor(isDefault = true)
+    constructor(isDefault = true, _piaeTest = false)
     {
         var res = (window.devicePixelRatio || 1);
 
@@ -39,6 +40,9 @@ class OsuTpp extends PIXI.Application
             .add([
                 "assets/img/taikohitcircle.png",
                 "assets/img/taikohitcircleoverlay.png",
+                "assets/img/barLight.png",
+                "assets/img/barMedium.png",
+                "assets/img/barHeavy.png",
             ])
             .load(() => { this.PIXIready = true; this.onStartUpLoadFinish(); });
 
@@ -53,6 +57,9 @@ class OsuTpp extends PIXI.Application
         // No audio rn
         this.mainAudio = null;
         this.length = -1;
+
+        // test
+        this._piaeTest = _piaeTest;
     }
 
     onStartUpLoadFinish()
@@ -63,6 +70,10 @@ class OsuTpp extends PIXI.Application
         // Register textures
         this.noteFillTex = this.loader.resources["assets/img/taikohitcircle.png"].texture;
         this.noteOverlayTex = this.loader.resources["assets/img/taikohitcircleoverlay.png"].texture;
+        this.barLightTex = this.loader.resources["assets/img/barLight.png"].texture;
+        this.barMediumTex = this.loader.resources["assets/img/barMedium.png"].texture;
+        this.barHeavyTex = this.loader.resources["assets/img/barHeavy.png"].texture;
+        this.barsTex = [this.barLightTex, this.barMediumTex, this.barHeavyTex];
 
         // Play audio
         this.length = this.mainAudio.duration() * 1000.0;
@@ -79,25 +90,60 @@ class OsuTpp extends PIXI.Application
 
         var _calc_gap = gap + trackH + ctrackH;
 
-        for (let i = 0; i < 10; i++)
+        if (this._piaeTest == true)
         {
-            var t = new PreviewTrack(this)
-                .SetTrackHeight(trackH)
-                .SetNoteHeight(ntrackH)
+            for (let i = 0; i < 1; i++)
+            {
+                var t = new PreviewTrack(this)
+                    .SetTrackHeight(trackH)
+                    .SetNoteHeight(ntrackH)
+                    .InitNoteRendererAccelerator();
+
+                var ct = new CurveTrack(this)
+                    .SetData(t.SVcurve)
+                    .SetTrackHeight(ctrackH);
+
+                t.y = 60 + (trackH / 2) + i * _calc_gap;
+                ct.y = 60 + trackH + (ctrackH / 2) + i * _calc_gap;
+
+                if (i > 0) { t.Mute(); }
+                this.stage.addChild(t);
+                this.stage.addChild(ct);
+                this.tracks.push(t);
+                this.tracks.push(ct);
+            }
+
+            var pt = new PiaeMentesTrack(this, 800)
+                .SetTrackHeight(800)
                 .InitNoteRendererAccelerator();
 
-            var ct = new CurveTrack(this)
-                .SetData(t.SVcurve)
-                .SetTrackHeight(ctrackH);
+            pt.y = 60 + _calc_gap + 400;
 
-            t.y = 60 + (trackH / 2) + i * _calc_gap;
-            ct.y = 60 + trackH + (ctrackH / 2) + i * _calc_gap;
+            this.stage.addChild(pt);
+            this.tracks.push(pt);
+        }
+        else
+        {
+            for (let i = 0; i < 10; i++)
+            {
+                var t = new PreviewTrack(this)
+                    .SetTrackHeight(trackH)
+                    .SetNoteHeight(ntrackH)
+                    .InitNoteRendererAccelerator();
 
-            if (i > 0) { t.Mute(); }
-            this.stage.addChild(t);
-            this.stage.addChild(ct);
-            this.tracks.push(t);
-            this.tracks.push(ct);
+                var ct = new CurveTrack(this)
+                    .SetData(t.SVcurve)
+                    .SetTrackHeight(ctrackH);
+
+                t.y = 60 + (trackH / 2) + i * _calc_gap;
+                ct.y = 60 + trackH + (ctrackH / 2) + i * _calc_gap;
+
+                if (i > 0) { t.Mute(); }
+                this.stage.addChild(t);
+                this.stage.addChild(ct);
+                this.tracks.push(t);
+                this.tracks.push(ct);
+            }
         }
 
         // Register update event
