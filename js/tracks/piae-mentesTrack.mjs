@@ -8,7 +8,7 @@ class PiaeMentesTrack extends PreviewTrack
 {
     constructor(app, height)
     {
-        super(app, height);
+        super(app, height, 1.0, CurveNodeType.Step);
         this.SetTrackHeight(height);
         this.waterHeight = 0.65 * this.trackHeight;
 

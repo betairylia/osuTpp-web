@@ -5,7 +5,7 @@ import { NoteTrack } from "./noteTrack.mjs";
 
 class PreviewTrack extends NoteTrack
 {
-    constructor(app, height)
+    constructor(app, height, SVGain = 2.0, SVInterpolate = CurveNodeType.Linear)
     {
         super(app, height, 0x242424);
 
@@ -32,6 +32,9 @@ class PreviewTrack extends NoteTrack
 
         this._prevTime = 0;
         this.muted = false;
+
+        this.SVGain = SVGain;
+        this.SVInterpolate = SVInterpolate;
 
         this.sortableChildren = true;
 
@@ -107,8 +110,8 @@ class PreviewTrack extends NoteTrack
                 // _SV = Math.max((_SV - 1.0) * 2.0 + _SV, 0.001);
                 // this.SVcurve.Insert(time, _SV * currentBPM / this.BPM, CurveNodeType.Linear);
 
-                _SV = Math.max((_SV - 1.0) * 1.0 + _SV, 0.001);
-                this.SVcurve.Insert(time, _SV * currentBPM / this.BPM, CurveNodeType.Step);
+                _SV = Math.max((_SV - 1.0) * this.SVGain + _SV, 0.001);
+                this.SVcurve.Insert(time, _SV * currentBPM / this.BPM, this.SVInterpolate);
             }
         }
 
