@@ -176,7 +176,7 @@ class PiaeMentesTrack extends PreviewTrack
                     else if (properties[4] == '8' || properties[4] == '2')
                     {
                         // k
-                        if (Math.randomm() > 0.5)
+                        if (Math.random() > 0.5)
                         {
                             this.AddNote(NotePM(targetTime, x, y, NoteTypes_pm.Light, 1.0, 0.7));
                             this.AddNote(NotePM(targetTime, x, y, NoteTypes_pm.Heavy, 2.0, 0.7));
