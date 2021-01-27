@@ -162,7 +162,7 @@ class PiaeMentesTrack extends PreviewTrack
                     if (properties[4] == '0')
                     {
                         // d
-                        if (Math.random() > 0.5)
+                        if (Math.random() > 0.3)
                         {
                             this.AddNote(NotePM(targetTime, x, y, NoteTypes_pm.Heavy, 1.0, 0.7));
                             this.AddNote(NotePM(targetTime, x, y, NoteTypes_pm.Medium, 3.0, 0.7));
@@ -176,16 +176,8 @@ class PiaeMentesTrack extends PreviewTrack
                     else if (properties[4] == '8' || properties[4] == '2')
                     {
                         // k
-                        if (Math.random() > 0.5)
-                        {
-                            this.AddNote(NotePM(targetTime, x, y, NoteTypes_pm.Light, 1.0, 0.7));
-                            this.AddNote(NotePM(targetTime, x, y, NoteTypes_pm.Heavy, 2.0, 0.7));
-                        }
-                        else
-                        {
-                            this.AddNote(NotePM(targetTime, x, y, NoteTypes_pm.Light, 3.0, 0.7));
-                            this.AddNote(NotePM(targetTime, x, y, NoteTypes_pm.Medium, 1.0, 0.7));
-                        }
+                        this.AddNote(NotePM(targetTime, x, y, NoteTypes_pm.Light, 3.0, 0.7));
+                        this.AddNote(NotePM(targetTime, x, y, NoteTypes_pm.Medium, 1.0, 0.7));
                     }
                     else if (properties[4] == '4')
                     {
